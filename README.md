@@ -7,11 +7,11 @@ Designed to work with [Coder](https://coder.com)'s `dotfiles` module (which runs
 ## Install
 
 ```sh
-git clone https://github.com/chrismegyeri/dotfiles.git ~/dotfiles
-~/dotfiles/install.sh
+git clone https://github.com/chrismegyeri/coder_dotfiles.git ~/coder_dotfiles
+~/coder_dotfiles/install.sh
 ```
 
-Or in Coder: set the workspace's **Dotfiles URL** to `https://github.com/chrismegyeri/dotfiles.git`.
+Or in Coder: set the workspace's **Dotfiles URL** to `https://github.com/chrismegyeri/coder_dotfiles.git`.
 
 ## What it does
 
