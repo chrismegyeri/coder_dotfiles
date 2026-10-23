@@ -26,6 +26,18 @@ clone https://github.com/catppuccin/zsh-syntax-highlighting.git "$ZDIR/catppucci
 cp "$ZDIR/catppuccin-zsh-syntax-highlighting/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh" \
    "$ZDIR/catppuccin_mocha.zsh" 2>/dev/null || true
 
+# MesloLGS NF (the recommended Nerd Font for Powerlevel10k glyphs). This helps
+# server-rendered terminals (e.g. KasmVNC). Browser terminals (code-server /
+# Coder web) render with the client's fonts, so install this font on your LOCAL
+# machine too and select it there -- see README.
+FONTDIR="$HOME/.local/share/fonts"
+mkdir -p "$FONTDIR"
+_fbase="https://github.com/romkatv/powerlevel10k-media/raw/master"
+for f in "MesloLGS NF Regular.ttf" "MesloLGS NF Bold.ttf" "MesloLGS NF Italic.ttf" "MesloLGS NF Bold Italic.ttf"; do
+  [ -f "$FONTDIR/$f" ] || curl -fsSL "$_fbase/${f// /%20}" -o "$FONTDIR/$f" 2>/dev/null || true
+done
+command -v fc-cache >/dev/null 2>&1 && fc-cache -f "$FONTDIR" >/dev/null 2>&1 || true
+
 # Link shell configs (back up anything already there).
 link() {
   local src="$1" dst="$2"
