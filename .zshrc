@@ -6,6 +6,23 @@ fi
 export PATH="$HOME/.local/bin:$PATH"
 ZDIR="$HOME/.local/share/zsh"
 
+# --- Catppuccin Mocha terminal palette (OSC escapes) ------------------------
+# Repaints the terminal's 16 ANSI colours + fg/bg/cursor to Catppuccin Mocha,
+# so fastfetch, Claude Code (dark-ansi) and anything using ANSI colours look
+# Catppuccin even in terminals without a Catppuccin theme (e.g. the Coder web
+# terminal). Works in xterm.js / xterm-compatible terminals. Interactive TTYs only.
+if [[ -o interactive && -t 1 && "$TERM" != "linux" && "$TERM" != "dumb" ]]; then
+  typeset -A _catp=(
+    0  45475a  1  f38ba8  2  a6e3a1  3  f9e2af  4  89b4fa  5  f5c2e7  6  94e2d5  7  bac2de
+    8  585b70  9  f38ba8  10 a6e3a1  11 f9e2af  12 89b4fa  13 f5c2e7  14 94e2d5  15 a6adc8
+  )
+  for _i in {0..15}; do printf '\e]4;%d;#%s\e\\' "$_i" "${_catp[$_i]}"; done
+  printf '\e]10;#cdd6f4\e\\'   # foreground (Text)
+  printf '\e]11;#1e1e2e\e\\'   # background (Base)
+  printf '\e]12;#f5e0dc\e\\'   # cursor (Rosewater)
+  unset _catp _i
+fi
+
 # --- Prompt -----------------------------------------------------------------
 # Default: Powerlevel10k. oh-my-posh is also installed; to use it instead,
 # comment the two P10k lines and uncomment the oh-my-posh block.
