@@ -20,7 +20,8 @@ Or in Coder: set the workspace's **Dotfiles URL** to `https://github.com/chrisme
 - Applies the **Catppuccin Mocha** syntax-highlighting theme and P10k accent colours.
 - Symlinks `.zshrc` and `.p10k.zsh` into `$HOME` (backing up any existing files).
 - Sets `zsh` as the default shell.
-- Writes `~/.claude/settings.json` with `theme: dark-ansi` so Claude Code renders in the Catppuccin terminal palette.
+- Installs a **Catppuccin Mocha powerline statusline** for Claude Code at `~/.claude/statusline.sh` (model / git / context bar / cost / duration / agent / vim segments) and wires it into `settings.json` (`statusLine`). Needs `jq` (installed) + a Nerd Font + a truecolor terminal. Adapted from [tjhanley's gist](https://gist.github.com/tjhanley/01f2d2b682739bdc4802db74655d37c7).
+- Writes `~/.claude/settings.json` with `theme: dark-ansi` so Claude Code renders in the Catppuccin terminal palette (merged, keeping any existing keys).
 
 ## Fonts (fixing the "boxes" in the prompt)
 

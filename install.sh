@@ -8,12 +8,13 @@ set -eu
 
 DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# zsh (sudo is available in Coder's base images; skip quietly if not root-capable)
-if ! command -v zsh >/dev/null 2>&1; then
-  if command -v sudo >/dev/null 2>&1; then
-    sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq \
-      && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq zsh fonts-powerline unzip || true
-  fi
+# Base deps (sudo is available in Coder's base images; install only what's missing).
+# jq is needed by the Claude Code statusline; git/unzip by the rest.
+_need=""
+for _b in zsh jq git unzip; do command -v "$_b" >/dev/null 2>&1 || _need="$_need $_b"; done
+if [ -n "$_need" ] && command -v sudo >/dev/null 2>&1; then
+  sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq || true
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq $_need fonts-powerline || true
 fi
 
 ZDIR="$HOME/.local/share/zsh"
@@ -61,10 +62,20 @@ if command -v zsh >/dev/null 2>&1 && command -v sudo >/dev/null 2>&1; then
   sudo chsh -s "$(command -v zsh)" "$(whoami)" 2>/dev/null || true
 fi
 
-# Claude Code: dark-ansi theme follows the Catppuccin terminal palette.
+# Claude Code: Catppuccin powerline statusline + dark-ansi theme (follows the
+# Catppuccin terminal palette). Merge into settings.json, keeping any existing keys.
 mkdir -p "$HOME/.claude"
-if [ ! -f "$HOME/.claude/settings.json" ]; then
-  printf '{\n  "theme": "dark-ansi"\n}\n' > "$HOME/.claude/settings.json"
+install -m 0755 "$DOTFILES_DIR/claude/statusline.sh" "$HOME/.claude/statusline.sh"
+SETTINGS="$HOME/.claude/settings.json"
+[ -f "$SETTINGS" ] || echo '{}' > "$SETTINGS"
+if command -v jq >/dev/null 2>&1; then
+  _tmp="$(mktemp)"
+  jq '. + {
+        theme: (.theme // "dark-ansi"),
+        statusLine: {type: "command", command: "~/.claude/statusline.sh", padding: 0}
+      }' "$SETTINGS" > "$_tmp" && mv "$_tmp" "$SETTINGS"
+else
+  printf '{\n  "theme": "dark-ansi",\n  "statusLine": { "type": "command", "command": "~/.claude/statusline.sh", "padding": 0 }\n}\n' > "$SETTINGS"
 fi
 
-echo "dotfiles installed: zsh + Powerlevel10k + Catppuccin Mocha; Claude theme=dark-ansi"
+echo "dotfiles installed: zsh + Powerlevel10k + Catppuccin Mocha; Claude statusline + dark-ansi theme"
