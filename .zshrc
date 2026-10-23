@@ -1,3 +1,11 @@
+# If this terminal's terminfo isn't known to the host (common over SSH from
+# kitty/alacritty/foot/wezterm/ghostty), fall back to xterm-256color so the zsh
+# line editor positions the cursor correctly. Without this, keystrokes and the
+# autosuggestion ghost text can duplicate/garble on redraw. Must run early.
+if [[ -n "${TERM:-}" ]] && ! infocmp "$TERM" >/dev/null 2>&1; then
+  export TERM=xterm-256color
+fi
+
 # Powerlevel10k instant prompt (keep near the top).
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
