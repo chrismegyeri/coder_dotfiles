@@ -38,6 +38,15 @@ for f in "MesloLGS NF Regular.ttf" "MesloLGS NF Bold.ttf" "MesloLGS NF Italic.tt
 done
 command -v fc-cache >/dev/null 2>&1 && fc-cache -f "$FONTDIR" >/dev/null 2>&1 || true
 
+# oh-my-posh (prompt engine) — installed and available alongside Powerlevel10k.
+# Installs the binary into ~/.local/bin and its themes (incl. catppuccin_mocha)
+# into ~/.cache/oh-my-posh/themes. P10k stays the active prompt; see .zshrc.
+mkdir -p "$HOME/.local/bin"
+if ! command -v oh-my-posh >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/oh-my-posh" ]; then
+  curl -fsSL https://ohmyposh.dev/install.sh | bash -s -- -d "$HOME/.local/bin" >/dev/null 2>&1 || \
+    echo "oh-my-posh install skipped (network?)"
+fi
+
 # Link shell configs (back up anything already there).
 link() {
   local src="$1" dst="$2"

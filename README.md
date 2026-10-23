@@ -15,7 +15,8 @@ Or in Coder: set the workspace's **Dotfiles URL** to `https://github.com/chrisme
 
 ## What it does
 
-- Installs `zsh` and clones Powerlevel10k + `zsh-autosuggestions` + `zsh-syntax-highlighting` into `~/.local/share/zsh`.
+- Installs `zsh` and clones Powerlevel10k + `zsh-autosuggestions` + `zsh-syntax-highlighting` into `~/.local/share/zsh`, sourced in the correct order (autosuggestions → syntax-highlighting → Catppuccin styles).
+- Installs **oh-my-posh** (binary + themes) into `~/.local/bin` / `~/.cache/oh-my-posh`, available alongside P10k (P10k is the active prompt; `.zshrc` shows how to switch).
 - Applies the **Catppuccin Mocha** syntax-highlighting theme and P10k accent colours.
 - Symlinks `.zshrc` and `.p10k.zsh` into `$HOME` (backing up any existing files).
 - Sets `zsh` as the default shell.
