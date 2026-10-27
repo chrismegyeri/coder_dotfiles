@@ -13,8 +13,11 @@ DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
 _need=""
 for _b in zsh jq git unzip tmux fzf; do command -v "$_b" >/dev/null 2>&1 || _need="$_need $_b"; done
 if [ -n "$_need" ] && command -v sudo >/dev/null 2>&1; then
-  sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq || true
-  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq $_need fonts-powerline || true
+  _apt() { sudo DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=300 "$@"; }
+  _apt update -qq || true
+  _apt install -y -qq $_need fonts-powerline || true
+  # Optional extras, installed one by one so a missing package can't abort the rest.
+  for _x in zoxide eza bat stow; do command -v "$_x" >/dev/null 2>&1 || _apt install -y -qq "$_x" >/dev/null 2>&1 || true; done
 fi
 
 ZDIR="$HOME/.local/share/zsh"
@@ -63,6 +66,11 @@ link "$DOTFILES_DIR/tmux/tmux.conf"   "$HOME/.config/tmux/tmux.conf"
 link "$DOTFILES_DIR/bin/tmux-keys"     "$HOME/.local/bin/tmux-keys"
 link "$DOTFILES_DIR/bin/tmux-sessions" "$HOME/.local/bin/tmux-sessions"
 chmod +x "$DOTFILES_DIR"/bin/tmux-*
+
+# OpenCode: Catppuccin Mocha themes (catppuccin/opencode, all accents). Choose one
+# once via OpenCode's `switch theme` menu; the choice persists in the home volume.
+mkdir -p "$HOME/.config/opencode/themes"
+cp -f "$DOTFILES_DIR"/opencode/themes/*.json "$HOME/.config/opencode/themes/"
 TPM="$HOME/.local/share/tmux/plugins/tpm"
 mkdir -p "$(dirname "$TPM")"
 clone https://github.com/tmux-plugins/tpm.git "$TPM"
