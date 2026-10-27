@@ -76,8 +76,9 @@ alias la='ls -A'
 
 # --- Optional tools (only wired up when installed) --------------------------
 if command -v fzf >/dev/null 2>&1; then
-  _first /usr/share/fzf/key-bindings.zsh   # Ctrl-R history, Ctrl-T files, Alt-C cd
-  _first /usr/share/fzf/completion.zsh
+  # Ctrl-R history, Ctrl-T files, Alt-C cd (Arch path first, then Debian/Ubuntu)
+  _first /usr/share/fzf/key-bindings.zsh /usr/share/doc/fzf/examples/key-bindings.zsh
+  _first /usr/share/fzf/completion.zsh /usr/share/doc/fzf/examples/completion.zsh
   export FZF_DEFAULT_OPTS="--height=60% --layout=reverse --border=rounded
     --color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8
     --color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc
