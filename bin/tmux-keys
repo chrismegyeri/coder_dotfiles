@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# tmux-keys — searchable cheat sheet of tmux AND Ghostty keybindings.
+# Built live from `tmux list-keys -N` and `ghostty +list-keybinds`, so it always
+# reflects the current config. Bound to Alt+? / prefix + ? in tmux.conf.
+set -u
+
+MAUVE=$'\e[38;2;203;166;247m'; PEACH=$'\e[38;2;250;179;135m'
+BLUE=$'\e[38;2;137;180;250m'; DIM=$'\e[38;2;108;112;134m'; RST=$'\e[0m'
+
+entries() {
+  if command -v tmux >/dev/null 2>&1 && tmux info >/dev/null 2>&1; then
+    tmux list-keys -N -T root   | sed "s/^[^ ]* //;s/^/${MAUVE}tmux   ${RST}${BLUE}[no prefix] /;s/\$/${RST}/"
+    tmux list-keys -N -T prefix | sed "s/^/${MAUVE}tmux   ${RST}${BLUE}/;s/\$/${RST}/"
+  fi
+  if command -v ghostty >/dev/null 2>&1; then
+    ghostty +list-keybinds 2>/dev/null | sed 's/^keybind = //' \
+      | awk -F= -v c="$PEACH" -v b="$BLUE" -v r="$RST" '
+          { key=$1; $1=""; sub(/^=/,"",$0); act=substr($0,2)
+            printf "%sghostty%s %s%-28s%s %s\n", c, r, b, key, r, act }'
+  fi
+}
+
+entries | fzf --ansi --no-sort --layout=reverse --prompt='keys ❯ ' \
+  --header=$'Type to filter ("tmux" / "ghostty" / a key / an action)  ·  Esc to close' \
+  --color='header:#6c7086' >/dev/null

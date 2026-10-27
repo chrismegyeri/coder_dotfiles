@@ -11,7 +11,7 @@ DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
 # Base deps (sudo is available in Coder's base images; install only what's missing).
 # jq is needed by the Claude Code statusline; git/unzip by the rest.
 _need=""
-for _b in zsh jq git unzip; do command -v "$_b" >/dev/null 2>&1 || _need="$_need $_b"; done
+for _b in zsh jq git unzip tmux fzf; do command -v "$_b" >/dev/null 2>&1 || _need="$_need $_b"; done
 if [ -n "$_need" ] && command -v sudo >/dev/null 2>&1; then
   sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq || true
   sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq $_need fonts-powerline || true
@@ -57,6 +57,18 @@ link() {
 link "$DOTFILES_DIR/.zshrc"  "$HOME/.zshrc"
 link "$DOTFILES_DIR/.p10k.zsh" "$HOME/.p10k.zsh"
 
+# tmux (Catppuccin Mocha, persistent sessions) + popup helpers.
+mkdir -p "$HOME/.config/tmux" "$HOME/.local/bin"
+link "$DOTFILES_DIR/tmux/tmux.conf"   "$HOME/.config/tmux/tmux.conf"
+link "$DOTFILES_DIR/bin/tmux-keys"     "$HOME/.local/bin/tmux-keys"
+link "$DOTFILES_DIR/bin/tmux-sessions" "$HOME/.local/bin/tmux-sessions"
+chmod +x "$DOTFILES_DIR"/bin/tmux-*
+TPM="$HOME/.local/share/tmux/plugins/tpm"
+mkdir -p "$(dirname "$TPM")"
+clone https://github.com/tmux-plugins/tpm.git "$TPM"
+[ -x "$TPM/bin/install_plugins" ] && \
+  TMUX_PLUGIN_MANAGER_PATH="$HOME/.local/share/tmux/plugins" "$TPM/bin/install_plugins" >/dev/null 2>&1 || true
+
 # Default shell -> zsh (persists in the home volume).
 if command -v zsh >/dev/null 2>&1 && command -v sudo >/dev/null 2>&1; then
   sudo chsh -s "$(command -v zsh)" "$(whoami)" 2>/dev/null || true
@@ -78,4 +90,4 @@ else
   printf '{\n  "theme": "dark-ansi",\n  "statusLine": { "type": "command", "command": "~/.claude/statusline.sh", "padding": 0 }\n}\n' > "$SETTINGS"
 fi
 
-echo "dotfiles installed: zsh + Powerlevel10k + Catppuccin Mocha; Claude statusline + dark-ansi theme"
+echo "dotfiles installed: zsh + Powerlevel10k + tmux + Catppuccin Mocha; Claude statusline + dark-ansi theme"

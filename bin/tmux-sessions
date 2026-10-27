@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# tmux-sessions — fzf session switcher/creator. Run inside a tmux popup (Alt+s /
+# prefix + s) or from a plain shell (`t`) to attach.
+#   Enter   switch to the selected session (or create it from a directory entry)
+#   typing  a name that matches nothing, then Enter, creates a new session
+#   Ctrl-x  kill the highlighted session
+set -u
+
+list() {
+  tmux list-sessions -F $'s\t #{session_name}  #[fg=#6c7086]#{session_windows}w#{?session_attached, attached,}\t#{session_name}\t#{session_path}' 2>/dev/null \
+    | sed 's/#\[[^]]*\]//g'
+  if command -v zoxide >/dev/null 2>&1; then
+    zoxide query -l 2>/dev/null | head -30 | while read -r d; do
+      n=$(basename "$d" | tr '.:' '__')
+      printf 'd\t %s  %s\t%s\t%s\n' "$n" "${d/#$HOME/~}" "$n" "$d"
+    done
+  fi | awk -F'\t' '$1=="s" {seen[$3]=1} $1=="s" || !seen[$3]++'
+}
+
+if [[ ${1:-} == --list ]]; then list; exit 0; fi
+
+out=$(list | fzf --delimiter=$'\t' --with-nth=2 --print-query --prompt='session ❯ ' \
+  --header=$'Enter: switch/create  ·  type a new name + Enter: create  ·  Ctrl-x: kill' \
+  --preview='if [ {1} = s ]; then tmux list-windows -t "={3}" -F "#{window_index}: #{window_name}  (#{window_panes} panes)"; else ls -A {4}; fi' \
+  --preview-window=right:45%:border-left \
+  --bind "ctrl-x:execute-silent([ {1} = s ] && tmux kill-session -t '={3}')+reload($0 --list)") || true
+
+query=$(sed -n 1p <<<"$out"); sel=$(sed -n 2p <<<"$out")
+
+if [[ -n $sel ]]; then
+  IFS=$'\t' read -r kind _ name path <<<"$sel"
+  [[ $kind == d ]] && ! tmux has-session -t "=$name" 2>/dev/null && tmux new-session -d -s "$name" -c "$path"
+elif [[ -n $query ]]; then
+  name=$(tr '.: ' '___' <<<"$query")
+  tmux has-session -t "=$name" 2>/dev/null || tmux new-session -d -s "$name"
+else
+  exit 0
+fi
+
+if [[ -n ${TMUX:-} ]]; then tmux switch-client -t "=$name"; else exec tmux attach -t "=$name"; fi

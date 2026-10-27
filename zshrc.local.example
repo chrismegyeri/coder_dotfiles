@@ -1,0 +1,17 @@
+# Example ~/.zshrc.local — copy to ~/.zshrc.local (NOT tracked; it is in .gitignore),
+# chmod 600, uncomment what you need, and replace the placeholder values.
+# Sourced at the end of ~/.zshrc. Every value below is a fake placeholder.
+
+# --- Claude Code ---
+# export CLAUDE_CODE_OAUTH_TOKEN="<your-claude-oauth-token>"
+
+# --- GitHub ---
+# export GITHUB_TOKEN="<your-github-personal-access-token>"
+
+# --- Proxmox VE (API token auth) ---
+# export PROXMOX_VE_ENDPOINT="https://<proxmox-host>:8006/"
+# export PROXMOX_VE_API_TOKEN="<user>@<realm>!<token-id>=<token-secret>"
+# export PROXMOX_VE_INSECURE="false"
+
+# --- Anything else ---
+# export SOME_SERVICE_API_KEY="<your-api-key>"

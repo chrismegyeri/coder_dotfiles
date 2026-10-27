@@ -19,6 +19,8 @@ Or in Coder: set the workspace's **Dotfiles URL** to `https://github.com/chrisme
 - Installs **oh-my-posh** (binary + themes) into `~/.local/bin` / `~/.cache/oh-my-posh`, available alongside P10k (P10k is the active prompt; `.zshrc` shows how to switch).
 - Applies the **Catppuccin Mocha** syntax-highlighting theme and P10k accent colours.
 - Symlinks `.zshrc` and `.p10k.zsh` into `$HOME` (backing up any existing files).
+- Installs **tmux** with a Catppuccin Mocha config (`tmux/tmux.conf` -> `~/.config/tmux/`), TPM plugins (catppuccin, resurrect, continuum), and two popup helpers in `~/.local/bin`: `tmux-sessions` (fzf session switcher, `Alt+s`) and `tmux-keys` (searchable cheat sheet, `Alt+/` or `F1`). Prefix is `Ctrl-a`; press `prefix ?` or `Alt+/` for all keys.
+- Loads untracked secrets from `~/.zshrc.local` (see `zshrc.local.example`; values are placeholders).
 - Sets `zsh` as the default shell.
 - Installs a **Catppuccin Mocha powerline statusline** for Claude Code at `~/.claude/statusline.sh` (model / git / context bar / cost / duration / agent / vim segments) and wires it into `settings.json` (`statusLine`). Needs `jq` (installed) + a Nerd Font + a truecolor terminal. Adapted from [tjhanley's gist](https://gist.github.com/tjhanley/01f2d2b682739bdc4802db74655d37c7).
 - Writes `~/.claude/settings.json` with `theme: dark-ansi` so Claude Code renders in the Catppuccin terminal palette (merged, keeping any existing keys).
