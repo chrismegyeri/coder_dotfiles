@@ -1,0 +1,13 @@
+{
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama (self-hosted)",
+      "options": {
+        "baseURL": "{env:OLLAMA_HOST}/v1",
+        "apiKey": "{env:OLLAMA_TOKEN}"
+      },
+      "models": {}
+    }
+  }
+}

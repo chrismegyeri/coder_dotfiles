@@ -67,10 +67,67 @@ link "$DOTFILES_DIR/bin/tmux-keys"     "$HOME/.local/bin/tmux-keys"
 link "$DOTFILES_DIR/bin/tmux-sessions" "$HOME/.local/bin/tmux-sessions"
 chmod +x "$DOTFILES_DIR"/bin/tmux-*
 
-# OpenCode: Catppuccin Mocha themes (catppuccin/opencode, all accents). Choose one
-# once via OpenCode's `switch theme` menu; the choice persists in the home volume.
-mkdir -p "$HOME/.config/opencode/themes"
-cp -f "$DOTFILES_DIR"/opencode/themes/*.json "$HOME/.config/opencode/themes/"
+# --- OpenCode ----------------------------------------------------------------
+# Themes: Catppuccin Mocha, all accents (catppuccin/opencode). Mocha/mauve is the
+# default, seeded below; switch any time with OpenCode's `/theme`.
+OC="$HOME/.config/opencode"
+mkdir -p "$OC/themes"
+cp -f "$DOTFILES_DIR"/opencode/themes/*.json "$OC/themes/"
+cp -f "$DOTFILES_DIR"/opencode/oh-my-opencode.jsonc.example "$OC/"
+
+# tui.json holds the theme (opencode.json has no `theme` key any more). Seeded
+# once only, so a theme picked with `/theme` isn't reset on the next start.
+[ -f "$OC/tui.json" ] || cp "$DOTFILES_DIR/opencode/tui.json" "$OC/tui.json"
+
+# opencode.json: oh-my-opencode as the base agent harness (OpenCode installs the
+# npm plugin itself at startup), plus Ollama as a provider when OLLAMA_HOST is set.
+# MERGED, never overwritten -- Coder's opencode module writes `.mcp.coder` into
+# this same file, and hand-added keys must survive an install.sh re-run.
+# NO CREDENTIALS ARE WRITTEN HERE: keys are referenced as {env:VAR} and resolved
+# from the environment at runtime (in a Coder workspace: ~/.config/coder/secrets.env,
+# populated from template variables). Never commit a literal token to this repo.
+if command -v jq >/dev/null 2>&1; then
+  [ -s "$OC/opencode.json" ] || echo '{}' > "$OC/opencode.json"
+  _tmp="$(mktemp)"
+
+  # Base keys. The plugin list is unioned, so a plugin added by hand is kept.
+  jq -s '.[0] as $cur | .[1] as $base
+         | ($cur * $base)
+         | .plugin = ((($cur.plugin // []) + ($base.plugin // [])) | unique)' \
+    "$OC/opencode.json" "$DOTFILES_DIR/opencode/opencode.json" > "$_tmp" \
+    && mv "$_tmp" "$OC/opencode.json"
+
+  # Ollama. A custom provider must enumerate its models, so ask the server what
+  # it has; without an endpoint the provider is removed again.
+  if [ -n "${OLLAMA_HOST:-}" ]; then
+    _models='{}'
+    if _tags="$(curl -fsS --max-time 5 \
+          ${OLLAMA_TOKEN:+-H "Authorization: Bearer $OLLAMA_TOKEN"} \
+          "$OLLAMA_HOST/api/tags" 2>/dev/null)"; then
+      _models="$(printf '%s' "$_tags" |
+        jq '[.models[]? | {key: .name, value: {name: .name}}] | from_entries')"
+      echo "opencode: discovered $(printf '%s' "$_models" | jq 'length') Ollama model(s)"
+    else
+      echo "opencode: $OLLAMA_HOST unreachable -- Ollama provider left with no models"
+    fi
+    _tmp="$(mktemp)"
+    jq -s --argjson models "$_models" \
+      '(.[0] * .[1])
+       | .provider.ollama.models = $models
+       | if (env.OLLAMA_TOKEN // "") == "" then del(.provider.ollama.options.apiKey) else . end' \
+      "$OC/opencode.json" "$DOTFILES_DIR/opencode/ollama-provider.json" > "$_tmp" \
+      && mv "$_tmp" "$OC/opencode.json"
+  else
+    _tmp="$(mktemp)"
+    jq 'del(.provider.ollama)
+        | if (.provider // {} | length) == 0 then del(.provider) else . end' \
+      "$OC/opencode.json" > "$_tmp" && mv "$_tmp" "$OC/opencode.json"
+  fi
+  echo "opencode: oh-my-opencode plugin + Catppuccin Mocha (mauve) configured"
+else
+  echo "opencode: jq missing -- skipped opencode.json" >&2
+fi
+
 TPM="$HOME/.local/share/tmux/plugins/tpm"
 mkdir -p "$(dirname "$TPM")"
 clone https://github.com/tmux-plugins/tpm.git "$TPM"

@@ -13,5 +13,25 @@
 # export PROXMOX_VE_API_TOKEN="<user>@<realm>!<token-id>=<token-secret>"
 # export PROXMOX_VE_INSECURE="false"
 
+# --- Git hosts (Gitea / Forgejo) ---
+# export GITEA_HOST="git.example.com"
+# export GITEA_USERNAME="<your-username>"
+# export GITEA_TOKEN="<your-gitea-token>"
+# export FORGEJO_HOST="git.example.org"
+# export FORGEJO_USERNAME="<your-username>"
+# export FORGEJO_TOKEN="<your-forgejo-token>"
+
+# --- Ollama (self-hosted; OLLAMA_HOST needs the scheme and no trailing slash) ---
+# export OLLAMA_HOST="http://<ollama-host>:11434"
+# export OLLAMA_TOKEN="<bearer-token-if-proxied>"
+
+# --- Model providers used by OpenCode ---
+# export OPENROUTER_API_KEY="<your-openrouter-key>"
+# export ZHIPU_API_KEY="<your-zai-coding-plan-key>"   # provider id: zai-coding-plan
+# export ANTHROPIC_API_KEY="<your-anthropic-key>"     # or run `opencode auth login`
+
 # --- Anything else ---
 # export SOME_SERVICE_API_KEY="<your-api-key>"
+
+# NOTE: in a Coder workspace these arrive via ~/.config/coder/secrets.env, which
+# the template writes from its own template variables -- this file isn't needed there.

@@ -1,0 +1,13 @@
+# This repo is PUBLIC and must never contain credentials.
+# Secrets live outside it: ~/.zshrc.local (any machine) or
+# ~/.config/coder/secrets.env (written by the Coder template at workspace start).
+.zshrc.local
+*.local
+secrets.env
+auth.json
+*.pem
+*.key
+id_*
+.env
+.env.*
+!*.example

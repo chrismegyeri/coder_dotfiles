@@ -19,6 +19,7 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 export PATH="$HOME/.local/bin:$PATH"
+[[ -d $HOME/.opencode/bin ]] && export PATH="$HOME/.opencode/bin:$PATH"
 ZDIR="$HOME/.local/share/zsh"
 
 # Source the first readable file of the given candidates (user clone first,
@@ -96,7 +97,12 @@ command -v bat >/dev/null 2>&1 && export BAT_THEME="Catppuccin Mocha"
 ta() { tmux new-session -A -s "${1:-main}"; }
 alias t='tmux-sessions'
 
-# Machine-local / secret settings (API tokens etc.). NOT tracked in the repo.
-# Copy ~/.dotfiles/zshrc.local.example to ~/.zshrc.local and fill it in. Example:
-#   export SOME_SERVICE_API_KEY="<your-api-key>"
+# --- Secrets (never tracked in this repo) -----------------------------------
+# 1. Coder workspaces: the template writes every configured token/endpoint to
+#    ~/.config/coder/secrets.env (0600) at workspace start, so git hosts,
+#    Proxmox, Ollama, OpenRouter and Z.AI work in every shell and tmux pane.
+#    Written by Coder, not by these dotfiles -- see README.
+[[ -r ~/.config/coder/secrets.env ]] && source ~/.config/coder/secrets.env
+# 2. Any machine: copy zshrc.local.example to ~/.zshrc.local and fill it in.
+#    Loaded last, so it can override anything above.
 [[ -r ~/.zshrc.local ]] && source ~/.zshrc.local
