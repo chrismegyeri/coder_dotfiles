@@ -1,0 +1,13 @@
+{
+  "provider": {
+    "experientiallabs": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Experiential Labs",
+      "options": {
+        "baseURL": "{env:EXPERIENTIALLABS_BASE_URL}",
+        "apiKey": "{env:EXPERIENTIALLABS_TOKEN}"
+      },
+      "models": {}
+    }
+  }
+}

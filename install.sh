@@ -165,6 +165,44 @@ if command -v jq >/dev/null 2>&1; then
         | if (.provider // {} | length) == 0 then del(.provider) else . end' \
       "$OC/opencode.json" > "$_tmp" && mv "$_tmp" "$OC/opencode.json"
   fi
+
+  # Experiential Labs: an OpenAI-compatible gateway, not a models.dev provider,
+  # so it needs registering by hand. Set EXPERIENTIALLABS_MODELS (comma
+  # separated) to pin specific models; otherwise they're discovered from
+  # <base>/models. The gateway fronts ~900 models, so discovery is capped --
+  # a model picker with 900 entries is unusable, and OpenCode has to carry
+  # every one of them in its config.
+  if [ -n "${EXPERIENTIALLABS_TOKEN:-}" ]; then
+    : "${EXPERIENTIALLABS_BASE_URL:=https://api.experientiallabs.ai/v1}"
+    export EXPERIENTIALLABS_BASE_URL
+    _xmodels='{}'
+    if [ -n "${EXPERIENTIALLABS_MODELS:-}" ]; then
+      _xmodels="$(printf '%s' "$EXPERIENTIALLABS_MODELS" |
+        jq -Rr 'split(",") | map(select(length > 0) | {key: ., value: {name: .}}) | from_entries')"
+      echo "opencode: Experiential Labs pinned to $(printf '%s' "$_xmodels" | jq 'length') model(s)"
+    elif _xlist="$(curl -fsS --max-time 10 -H "Authorization: Bearer $EXPERIENTIALLABS_TOKEN" \
+          "$EXPERIENTIALLABS_BASE_URL/models" 2>/dev/null)"; then
+      _xmodels="$(printf '%s' "$_xlist" |
+        jq '[.data[]? | .id] | sort | .[0:40] | map({key: ., value: {name: .}}) | from_entries')"
+      _xtotal="$(printf '%s' "$_xlist" | jq '[.data[]?] | length')"
+      echo "opencode: discovered $_xtotal Experiential Labs model(s), exposing $(printf '%s' "$_xmodels" | jq 'length')"
+      [ "${_xtotal:-0}" -gt 40 ] 2>/dev/null && \
+        echo "  (capped at 40 -- set EXPERIENTIALLABS_MODELS to choose exactly which ones)"
+    else
+      echo "opencode: $EXPERIENTIALLABS_BASE_URL/models unreachable -- provider added with no models"
+      echo "  (set EXPERIENTIALLABS_MODELS to list them explicitly)"
+    fi
+    _tmp="$(mktemp)"
+    jq -s --argjson models "$_xmodels" \
+      '(.[0] * .[1]) | .provider.experientiallabs.models = $models' \
+      "$OC/opencode.json" "$DOTFILES_DIR/opencode/experientiallabs-provider.json" > "$_tmp" \
+      && mv "$_tmp" "$OC/opencode.json"
+  else
+    _tmp="$(mktemp)"
+    jq 'del(.provider.experientiallabs)
+        | if (.provider // {} | length) == 0 then del(.provider) else . end' \
+      "$OC/opencode.json" > "$_tmp" && mv "$_tmp" "$OC/opencode.json"
+  fi
   echo "opencode: oh-my-opencode plugin + Catppuccin Mocha (mauve) configured"
 else
   echo "opencode: jq missing -- skipped opencode.json" >&2
