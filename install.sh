@@ -14,10 +14,37 @@ _need=""
 for _b in zsh jq git unzip tmux fzf; do command -v "$_b" >/dev/null 2>&1 || _need="$_need $_b"; done
 if [ -n "$_need" ] && command -v sudo >/dev/null 2>&1; then
   _apt() { sudo DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=300 "$@"; }
-  _apt update -qq || true
-  _apt install -y -qq $_need fonts-powerline || true
-  # Optional extras, installed one by one so a missing package can't abort the rest.
-  for _x in zoxide eza bat stow; do command -v "$_x" >/dev/null 2>&1 || _apt install -y -qq "$_x" >/dev/null 2>&1 || true; done
+
+  # `apt-get update` takes /var/lib/apt/lists/lock, which DPkg::Lock::Timeout does
+  # NOT cover. In Coder the template's startup script installs packages at the same
+  # time as this script, so a single `update` loses the race, leaves the package
+  # lists empty, and every install then fails with "Unable to locate package".
+  # Retry until the lists are actually usable.
+  _updated=""
+  for _try in 1 2 3 4 5 6; do
+    if _apt update -qq 2>/dev/null && apt-cache policy zsh 2>/dev/null | grep -q 'Candidate:'; then
+      _updated=1; break
+    fi
+    sleep 10
+  done
+  [ -n "$_updated" ] || echo "warning: apt lists unavailable (lock contention?); skipping apt installs"
+
+  # One package per call, and only if apt actually has a candidate, so one
+  # unavailable package can't take the rest of the batch down with it.
+  # fonts-powerline is optional: Powerlevel10k's glyphs come from the Nerd Font
+  # installed further down, not from this package.
+  if [ -n "$_updated" ]; then
+    for _p in $_need fonts-powerline zoxide eza bat stow; do
+      case "$_p" in zsh|jq|git|unzip|tmux|fzf|fonts-powerline) ;; *)
+        command -v "$_p" >/dev/null 2>&1 && continue ;;
+      esac
+      if apt-cache policy "$_p" 2>/dev/null | grep -q 'Candidate: [^(]'; then
+        _apt install -y -qq "$_p" >/dev/null 2>&1 || echo "note: failed to install $_p"
+      else
+        echo "note: $_p not available on this release, skipped"
+      fi
+    done
+  fi
 fi
 
 ZDIR="$HOME/.local/share/zsh"
@@ -30,16 +57,31 @@ clone https://github.com/catppuccin/zsh-syntax-highlighting.git "$ZDIR/catppucci
 cp "$ZDIR/catppuccin-zsh-syntax-highlighting/themes/catppuccin_mocha-zsh-syntax-highlighting.zsh" \
    "$ZDIR/catppuccin_mocha.zsh" 2>/dev/null || true
 
-# MesloLGS NF (the recommended Nerd Font for Powerlevel10k glyphs). This helps
-# server-rendered terminals (e.g. KasmVNC). Browser terminals (code-server /
-# Coder web) render with the client's fonts, so install this font on your LOCAL
-# machine too and select it there -- see README.
+# MesloLGS NF (the recommended Nerd Font for Powerlevel10k glyphs). This is what
+# actually provides the prompt icons -- the optional fonts-powerline apt package
+# only carries the older powerline symbols. It matters for server-rendered
+# terminals; browser terminals (code-server / the Coder web terminal) and
+# `coder ssh` render with your LOCAL machine's fonts, so install MesloLGS NF
+# there too and select it in that client -- see README.
 FONTDIR="$HOME/.local/share/fonts"
 mkdir -p "$FONTDIR"
 _fbase="https://github.com/romkatv/powerlevel10k-media/raw/master"
+_fgot=0
 for f in "MesloLGS NF Regular.ttf" "MesloLGS NF Bold.ttf" "MesloLGS NF Italic.ttf" "MesloLGS NF Bold Italic.ttf"; do
-  [ -f "$FONTDIR/$f" ] || curl -fsSL "$_fbase/${f// /%20}" -o "$FONTDIR/$f" 2>/dev/null || true
+  if [ -s "$FONTDIR/$f" ]; then _fgot=$((_fgot+1)); continue; fi
+  # -f so an HTTP error leaves no truncated file behind; retry a flaky network once.
+  if curl -fsSL --retry 2 --retry-delay 2 "$_fbase/${f// /%20}" -o "$FONTDIR/$f" 2>/dev/null \
+     && [ -s "$FONTDIR/$f" ]; then
+    _fgot=$((_fgot+1))
+  else
+    rm -f "$FONTDIR/$f"
+  fi
 done
+if [ "$_fgot" -eq 4 ]; then
+  echo "fonts: MesloLGS NF installed (4 files) in $FONTDIR"
+else
+  echo "warning: only $_fgot/4 MesloLGS NF files present -- prompt glyphs may show as boxes"
+fi
 command -v fc-cache >/dev/null 2>&1 && fc-cache -f "$FONTDIR" >/dev/null 2>&1 || true
 
 # oh-my-posh (prompt engine) — installed and available alongside Powerlevel10k.
