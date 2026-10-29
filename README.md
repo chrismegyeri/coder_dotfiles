@@ -80,8 +80,12 @@ Powerlevel10k icons need a **Nerd Font** wherever the terminal is *drawn*:
   (already set by the template) — refresh the terminal.
 - **`coder ssh` in your own terminal app**: install the font locally and select
   it in that app's settings.
-- **KasmVNC desktop** (rendered server-side): `install.sh` already drops the font
-  into `~/.local/share/fonts`, so it works there.
+- **Server-rendered terminals** (a VNC/X desktop, if you add one): `install.sh`
+  already drops MesloLGS NF into `~/.local/share/fonts` and refreshes the font
+  cache, so it works there without any local install. It prints `fonts: MesloLGS
+  NF installed (4 files)` on success, or warns with the count if a download
+  failed. `fonts-powerline` from apt is optional and unrelated — the glyphs come
+  from the Nerd Font, not that package.
 
 Download MesloLGS NF:
 <https://github.com/romkatv/powerlevel10k/blob/master/font.md> — or the 4 TTFs
